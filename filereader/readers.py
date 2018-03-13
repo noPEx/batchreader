@@ -44,25 +44,28 @@ class Producer:
         self.newline_offset = [i for i in range(LINE_COUNT)]
         self.previous_batch_data = f.read(EACH_LINE_BYTE)
         self.next_batch_data = None
+        self.data_available = True
+        self.rth = None
+
+    def get_reader_thread(self):
+        return self.rth
 
     def get_data(self, start, end):
-        rth  = BatchReaderThread(condition, "off_%s_%s"%(start,end), self.fp, start*BATCH_SIZE, end*BATCH_SIZE)
-        rth.start()
+        self.condition.acquire()
+
+        self.data_available = False
+        self.rth  = BatchReaderThread(condition, "off_%s_%s"%(start,end), self.fp, start*BATCH_SIZE, end*BATCH_SIZE)
+        self.rth.start()
         return self.previous_batch_data
 
         #read into next
         
-        
-        
-
-
-
-
-
+       
 
 class Consumer:
 
-    def __init__(self):
+    def __init__(self, condition):
+        self.condition
         self.producer = Producer( 'data.txt', 1)
         self.N = 100*100*1000
 
@@ -73,11 +76,21 @@ class Consumer:
 
     def run(self):
         for i in range(BATCHES):
+            self.condition.acquire()
+
+            if not self.producer.data_available:
+                prin 'consumer is waiting for data'
+                self.condition.wait()
+
+            
             batch_data = self.producer.get_data(i*BATCH_SIZE, i*BATCH_SIZE + BATCH_SIZE)
+
+            self.producer.data_available = False
 
 
 def main():
     condition = threading.Condition()
-    producer = Producer(condition, 'data.txt', 1)
+    consumer = Consumer(condition, 'data.txt', 1)
+    #producer = Producer(condition, 'data.txt', 1)
 if __name__ == "__main__":
     main()
