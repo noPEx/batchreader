@@ -4,7 +4,7 @@ EACH_LINE_BYTE = 7
 BATCHES = 1000
 BATCH_SIZE = 100000
 
-DATA_FILE = 'data_100_100000.txt'
+DATA_FILE = 'data_%s_%s.txt'%(BATCHES, BATCH_SIZE)
 fp = open(DATA_FILE, 'r')
 
 
