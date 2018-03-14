@@ -1,8 +1,8 @@
 
 import time
 EACH_LINE_BYTE = 7
-BATCHES = 1000
-BATCH_SIZE = 100000
+BATCHES = 100
+BATCH_SIZE = 10000
 
 DATA_FILE = 'data_%s_%s.txt'%(BATCHES, BATCH_SIZE)
 fp = open(DATA_FILE, 'r')
@@ -30,6 +30,7 @@ class my_timer:
 def reader():
     for i in range(BATCHES):
         #print i 
+        fp.seek(0)
         fp.seek(i * BATCH_SIZE*EACH_LINE_BYTE)
         data = fp.read(BATCH_SIZE*EACH_LINE_BYTE)
         countdown()

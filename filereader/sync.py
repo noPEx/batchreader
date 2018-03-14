@@ -1,4 +1,5 @@
 import threading
+import time
 
 LINE_COUNT = 1000
 EACH_LINE_BYTE = 7
@@ -9,7 +10,7 @@ DATA_FILE = 'data_%s_%s.txt'%( BATCHES, BATCH_SIZE)
 
 
 
-def countdown():
+def train_model():
     N = 1000*1000*10
     while N>0:
         N -= 1
@@ -28,27 +29,20 @@ class my_timer:
 
 class ProducerThread(threading.Thread):
 
-    def __init__(self, condition, queue, condition_item_consumed):
+    def __init__(self, condition, queue):
         threading.Thread.__init__(self)
         self.condition = condition
         self.queue = queue
-        self.condition_item_consumed = condition_item_consumed
         self.fp = open(DATA_FILE,'r')
 
     def run(self):
         for i in range(BATCHES):
-            self.condition.acquire()
-
-            #print 'i ',i
+            self.fp.seek(0)
             self.fp.seek(i * BATCH_SIZE  *EACH_LINE_BYTE)
             lines = self.fp.read( BATCH_SIZE*EACH_LINE_BYTE)
 
-            """
-            if self.queue:
-                #print 'waiting for item to get consumed'
-                self.condition_item_consumed.wait()
-                #print 'item consumed. now go and write'
-            """
+            self.condition.acquire()
+
             if self.queue:
                 #print 'prod:waiting to write for ', i
                 self.condition.wait()
@@ -56,19 +50,18 @@ class ProducerThread(threading.Thread):
 
             self.queue.append(lines)
             #print 'Produced ', i
+
             self.condition.notify()
             self.condition.release()
         self.fp.close()
             
 
-import time
 class ConsumerThread(threading.Thread):
 
-    def __init__(self, condition, queue, condition_item_consumed):
+    def __init__(self, condition, queue):
         threading.Thread.__init__(self)
         self.condition = condition
         self.queue = queue
-        self.condition_item_consumed = condition_item_consumed
 
     def run(self):
         for i in range(BATCHES):
@@ -84,7 +77,7 @@ class ConsumerThread(threading.Thread):
             self.condition.release()
             #time.sleep(1)
             #print 'consumed %s %s'%(i, '\n')
-            countdown()
+            train_model()
             
             #time.sleep(1)
             #self.condition_item_consumed.release()
@@ -94,9 +87,8 @@ class ConsumerThread(threading.Thread):
 def main():
     queue = []
     condition = threading.Condition()
-    condition_item_consumed = threading.Condition()
-    consumer = ConsumerThread(condition, queue, condition_item_consumed)
-    producer = ProducerThread(condition, queue, condition_item_consumed)
+    consumer = ConsumerThread(condition, queue)
+    producer = ProducerThread(condition, queue)
     consumer.start()
     producer.start()
     consumer.join()
