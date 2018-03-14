@@ -1,16 +1,16 @@
 
 import time
 EACH_LINE_BYTE = 7
-BATCHES = 100
-BATCH_SIZE = 10000
+BATCHES = 1000
+BATCH_SIZE = 100000
 
 DATA_FILE = 'data_%s_%s.txt'%(BATCHES, BATCH_SIZE)
 fp = open(DATA_FILE, 'r')
 
 
-def countdown():
+def train_model():
     #print 'ok '
-    N = 1000*1000*10
+    N = 1000*1000*10*3
     while N>0:
         N -= 1
     #print 'done '
@@ -33,7 +33,7 @@ def reader():
         fp.seek(0)
         fp.seek(i * BATCH_SIZE*EACH_LINE_BYTE)
         data = fp.read(BATCH_SIZE*EACH_LINE_BYTE)
-        countdown()
+        train_model()
 
 
 with my_timer('plain'):

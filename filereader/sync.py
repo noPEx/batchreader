@@ -1,17 +1,17 @@
 import threading
 import time
 
-LINE_COUNT = 1000
+#LINE_COUNT = 1000
 EACH_LINE_BYTE = 7
-BATCHES = 100
-BATCH_SIZE = 10000
+BATCHES = 1000
+BATCH_SIZE = 100000
 
 DATA_FILE = 'data_%s_%s.txt'%( BATCHES, BATCH_SIZE)
 
 
 
 def train_model():
-    N = 1000*1000*10
+    N = 1000*1000*10*3
     while N>0:
         N -= 1
 
