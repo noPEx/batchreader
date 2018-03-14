@@ -2,8 +2,8 @@ import threading
 
 LINE_COUNT = 1000
 EACH_LINE_BYTE = 7
-BATCHES = 1000
-BATCH_SIZE = 100000
+BATCHES = 100
+BATCH_SIZE = 10000
 
 DATA_FILE = 'data_%s_%s.txt'%( BATCHES, BATCH_SIZE)
 
@@ -50,8 +50,9 @@ class ProducerThread(threading.Thread):
                 #print 'item consumed. now go and write'
             """
             if self.queue:
-                #print 'waiting to write for ', i
+                #print 'prod:waiting to write for ', i
                 self.condition.wait()
+                #print 'woke up %s %s'%( i, '\n')
 
             self.queue.append(lines)
             #print 'Produced ', i
@@ -78,10 +79,12 @@ class ConsumerThread(threading.Thread):
                 #print 'queue:consumer filled up',i
 
             batch_data = self.queue.pop(0)
-            #print 'consumed ', i
-            countdown()
+            #print 'notifying ', i
             self.condition.notify()
             self.condition.release()
+            #time.sleep(1)
+            #print 'consumed %s %s'%(i, '\n')
+            countdown()
             
             #time.sleep(1)
             #self.condition_item_consumed.release()
