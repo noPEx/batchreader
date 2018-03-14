@@ -2,10 +2,17 @@ import threading
 
 LINE_COUNT = 1000
 EACH_LINE_BYTE = 7
-BATCHES = 100
+BATCHES = 1000
 BATCH_SIZE = 100000
 
-DATA_FILE = 'data_100_100000.txt'
+DATA_FILE = 'data_%s_%s.txt'%( BATCHES, BATCH_SIZE)
+
+
+
+def countdown():
+    N = 1000*1000*10
+    while N>0:
+        N -= 1
 
 class my_timer:
     def __init__(self, name):
@@ -32,21 +39,22 @@ class ProducerThread(threading.Thread):
         for i in range(BATCHES):
             self.condition.acquire()
 
-            self.fp.seek(i*EACH_LINE_BYTE)
+            #print 'i ',i
+            self.fp.seek(i * BATCH_SIZE  *EACH_LINE_BYTE)
             lines = self.fp.read( BATCH_SIZE*EACH_LINE_BYTE)
 
             """
             if self.queue:
-                print 'waiting for item to get consumed'
+                #print 'waiting for item to get consumed'
                 self.condition_item_consumed.wait()
-                print 'item consumed. now go and write'
+                #print 'item consumed. now go and write'
             """
             if self.queue:
-                print 'waiting to write for ', i
+                #print 'waiting to write for ', i
                 self.condition.wait()
 
             self.queue.append(lines)
-            print 'Produced ', i
+            #print 'Produced ', i
             self.condition.notify()
             self.condition.release()
         self.fp.close()
@@ -65,12 +73,13 @@ class ConsumerThread(threading.Thread):
         for i in range(BATCHES):
             self.condition.acquire()
             if not self.queue:
-                print 'waiting for the queue to fill', i
+                #print 'waiting for the queue to fill', i
                 self.condition.wait()
-                print 'queue:consumer filled up',i
+                #print 'queue:consumer filled up',i
 
             batch_data = self.queue.pop(0)
-            print 'consumed ', i
+            #print 'consumed ', i
+            countdown()
             self.condition.notify()
             self.condition.release()
             
