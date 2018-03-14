@@ -1,4 +1,4 @@
-experiments on multhreading/gil/throughput when using threads etc
+experiments on python multhreading/gil/throughput when using threads etc
 
 Here is a talk on GIL by the creator of PLY(Python Lex/Yacc)
    - www.dabeaz.com/python/UnderstandingGIL.pdf
