@@ -1,6 +1,13 @@
 import time
 from multiprocessing import Pipe, Process, Condition
 import threading
+import random
+
+FILENAME='/home/soumya/training_samples/whiplash_x_10.mp4'
+
+KB = 1024
+MB = KB*KB
+GB = KB*MB
 
 BATCHES = 10
 
@@ -36,7 +43,7 @@ class PipeOutThread(threading.Thread):
             if self.get_queue_size() < 1:
                 print 'pipe:Thread is waiting'
                 self.condition.wait()
-                print 'just woke up buddy', id(self.queue), self.queue
+                print 'just woke up buddy'
                 
             print 'popping on len: %s'%(len(self.queue))
             self.prod_end.send( self.queue.pop(0) )
@@ -62,6 +69,9 @@ class Producer(Process):
         
 
     def _preprocess(self, data):
+        N = 1000*1000*10*3
+        while N>0:
+            N -= 1
         return data
 
     def _is_shared_queue_full(self):
@@ -83,20 +93,25 @@ class Producer(Process):
             self.condition.wait()
 
         self.batch_queue.append( data )
-        print 'self.batch_queue', len(self.batch_queue), self.batch_queue
+        print 'self.batch_queue', len(self.batch_queue)
         self.condition.notify()
         self.condition.release()
 
 
         
 
-    def _read_data(self, i, dummy=True):
+    def _read_data(self, i, dummy=False):
         if dummy:
-            return True
+            return 'soumya' 
         else:
-            self.fp.seek(0)
-            data = self.fp.seek(i * BATCH_SIZE  *EACH_LINE_BYTE)
-            return "soumya"
+            data = None
+            with my_timer('freader: %s'%(i)):
+                offset = random.randint(5,16)*GB
+                print 'offset is : ' , offset/GB
+                self.fp.seek(offset)
+                data = self.fp.read(GB)
+                print 'len_data ', len(data)
+            return data 
 
     def run(self):
         self.pipe_out_thread.start()
@@ -105,7 +120,7 @@ class Producer(Process):
             self._preprocess_and_put_in_queue(data)
             print 'prod put %s'%(i)
         self.pipe_out_thread.join()
-        print 'done in processor'
+        print 'done with processor'
 
 
 class Consumer:
@@ -122,17 +137,16 @@ class Consumer:
         for i in range(BATCHES):
             print 'consumer waiting'
             batch_data = self.cons_end.recv()
-            print 'consumer read at %s   ===  %s'%(i, batch_data)
+            print 'consumer read at %s   with size===  %s'%(i, len(batch_data))
         print 'done in consumer'
 
 
 def main():
-    fname = '/home/soumya/training_samples/whiplash.mp4'
     condition = threading.Condition()
-    SIZE = 3
+    SIZE = 1
     cons_end, prod_end = Pipe()
     consumer = Consumer(cons_end)
-    producer = Producer(prod_end, fname, SIZE)
+    producer = Producer(prod_end, FILENAME, SIZE)
     producer.start()
     consumer.run()
     producer.join()
