@@ -143,7 +143,7 @@ class Consumer:
 
 def main():
     condition = threading.Condition()
-    SIZE = 1
+    SIZE = 3 
     cons_end, prod_end = Pipe()
     consumer = Consumer(cons_end)
     producer = Producer(prod_end, FILENAME, SIZE)
