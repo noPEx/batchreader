@@ -38,7 +38,7 @@ class PipeOutThread(threading.Thread):
                 self.condition.wait()
                 print 'just woke up buddy', id(self.queue), self.queue
                 
-            print 'popping'
+            print 'popping on len: %s'%(len(self.queue))
             self.prod_end.send( self.queue.pop(0) )
             
             #self.prod_end.send( self.queue[0] )
@@ -83,19 +83,20 @@ class Producer(Process):
             self.condition.wait()
 
         self.batch_queue.append( data )
-        print 'self.batch_queue', id(self.batch_queue), self.batch_queue
+        print 'self.batch_queue', len(self.batch_queue), self.batch_queue
         self.condition.notify()
         self.condition.release()
 
 
         
 
-    def _read_data(self, i):
-        """
-        self.fp.seek(0)
-        data = self.fp.seek(i * BATCH_SIZE  *EACH_LINE_BYTE)
-        """
-        return "soumya"
+    def _read_data(self, i, dummy=True):
+        if dummy:
+            return True
+        else:
+            self.fp.seek(0)
+            data = self.fp.seek(i * BATCH_SIZE  *EACH_LINE_BYTE)
+            return "soumya"
 
     def run(self):
         self.pipe_out_thread.start()
@@ -128,7 +129,7 @@ class Consumer:
 def main():
     fname = '/home/soumya/training_samples/whiplash.mp4'
     condition = threading.Condition()
-    SIZE = 1
+    SIZE = 3
     cons_end, prod_end = Pipe()
     consumer = Consumer(cons_end)
     producer = Producer(prod_end, fname, SIZE)
