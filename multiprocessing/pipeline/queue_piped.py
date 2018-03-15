@@ -20,6 +20,7 @@ class my_timer:
 class PipeOutThread(threading.Thread):
 
     def __init__(self, prod_end, condition, SHARED_QUEUE_SIZE_LIMIT, queue):
+        super(PipeOutThread, self).__init__()
         self.queue = queue
         self.SHARED_QUEUE_SIZE_LIMIT = SHARED_QUEUE_SIZE_LIMIT
         self.condition = condition
@@ -29,10 +30,10 @@ class PipeOutThread(threading.Thread):
         return len(self.queue)
 
     def run(self):
-        for i in range(BATCH_SIZE):
+        for i in range(BATCHES):
             self.condition.acquire()
 
-            if self.get_queue_size(self) < 1:
+            if self.get_queue_size() < 1:
                 self.condition.wait()
                 
             self.prod_end.send( self.queue.pop(0) )
@@ -53,6 +54,7 @@ class Producer(Process):
         self.batch_queue = []
         self.condition = Condition()
         self.pipe_out_thread = PipeOutThread( prod_end, self.condition, self.SHARED_QUEUE_SIZE_LIMIT, self.batch_queue)
+        self.pipe_out_thread.start()
         
 
     def _preprocess(self, data):
