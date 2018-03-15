@@ -39,9 +39,9 @@ class PipeOutThread(threading.Thread):
                 print 'just woke up buddy', id(self.queue), self.queue
                 
             print 'popping'
-            #self.prod_end.send( self.queue.pop(0) )
+            self.prod_end.send( self.queue.pop(0) )
             
-            self.prod_end.send( self.queue[0] )
+            #self.prod_end.send( self.queue[0] )
 
             self.condition.notify()
             self.condition.release()
@@ -102,6 +102,8 @@ class Producer(Process):
         for i in range(BATCHES):
             data = self._read_data(i)
             self._preprocess_and_put_in_queue(data)
+            print 'prod put %s'%(i)
+        self.pipe_out_thread.join()
         print 'done in processor'
 
 
@@ -120,6 +122,7 @@ class Consumer:
             print 'consumer waiting'
             batch_data = self.cons_end.recv()
             print 'consumer read at %s   ===  %s'%(i, batch_data)
+        print 'done in consumer'
 
 
 def main():
