@@ -34,9 +34,14 @@ class PipeOutThread(threading.Thread):
             self.condition.acquire()
 
             if self.get_queue_size() < 1:
+                print 'pipe:Thread is waiting'
                 self.condition.wait()
+                print 'just woke up buddy', id(self.queue), self.queue
                 
-            self.prod_end.send( self.queue.pop(0) )
+            print 'popping'
+            #self.prod_end.send( self.queue.pop(0) )
+            
+            self.prod_end.send( self.queue[0] )
 
             self.condition.notify()
             self.condition.release()
@@ -54,7 +59,6 @@ class Producer(Process):
         self.batch_queue = []
         self.condition = Condition()
         self.pipe_out_thread = PipeOutThread( prod_end, self.condition, self.SHARED_QUEUE_SIZE_LIMIT, self.batch_queue)
-        self.pipe_out_thread.start()
         
 
     def _preprocess(self, data):
@@ -73,10 +77,13 @@ class Producer(Process):
 
         self.condition.acquire()
 
+        print 'prod acquired'
         if self._is_shared_queue_full():
+            print 'prod: queue is full so waiting'
             self.condition.wait()
 
         self.batch_queue.append( data )
+        print 'self.batch_queue', id(self.batch_queue), self.batch_queue
         self.condition.notify()
         self.condition.release()
 
@@ -91,9 +98,11 @@ class Producer(Process):
         return "soumya"
 
     def run(self):
+        self.pipe_out_thread.start()
         for i in range(BATCHES):
             data = self._read_data(i)
             self._preprocess_and_put_in_queue(data)
+        print 'done in processor'
 
 
 class Consumer:
@@ -108,6 +117,7 @@ class Consumer:
 
     def run(self):
         for i in range(BATCHES):
+            print 'consumer waiting'
             batch_data = self.cons_end.recv()
             print 'consumer read at %s   ===  %s'%(i, batch_data)
 
@@ -119,8 +129,8 @@ def main():
     cons_end, prod_end = Pipe()
     consumer = Consumer(cons_end)
     producer = Producer(prod_end, fname, SIZE)
-    consumer.run()
     producer.start()
+    consumer.run()
     producer.join()
 
 if __name__ == "__main__":
