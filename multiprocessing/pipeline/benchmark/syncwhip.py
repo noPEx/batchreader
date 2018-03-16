@@ -6,11 +6,13 @@ import random
 FILENAME='/home/soumya/training_samples/whiplash_x_10.mp4'
 SIZE = 3 
 
+
 KB = 1024
 MB = KB*KB
 GB = KB*MB
 
 BATCHES = 10
+CHUNK_SIZE_TO_READ = int(GB/2)
 
 
 class my_timer:
@@ -42,7 +44,7 @@ class Producer():
     def _preprocess_and_put_in_queue(self, data):
 
         self.batch_queue.append( self._preprocess(data) )
-        print 'self.batch_queue', len(self.batch_queue), self.batch_queue
+        #print 'self.batch_queue', len(self.batch_queue), self.batch_queue
 
 
         
@@ -52,9 +54,10 @@ class Producer():
             return 'soumya' 
         else:
             offset = random.randint(5,16)*GB
-            print 'offset is : ' , offset/GB
+            #print 'offset is : ' , offset/GB
             self.fp.seek(offset)
-            data = self.fp.read(GB)
+            data = self.fp.read(CHUNK_SIZE_TO_READ)
+            #print 'length ', len(data)/KB
             return data
 
     def run(self):
@@ -76,10 +79,11 @@ class Consumer:
 
     def run(self):
         for i in range(BATCHES):
-            print 'consumer waiting'
-            batch_data = self.producer._read_data()
-            print 'consumer read at %s   with size===  %s'%(i, len(batch_data))
-        print 'done in consumer'
+            #print 'consumer waiting'
+            batch_data = self.producer.run()
+            self.train_model()
+            #print 'consumer read at %s   with size===  %s'%(i, len(batch_data))
+        #print 'done in consumer'
 
 
 def main():
