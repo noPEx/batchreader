@@ -1,4 +1,5 @@
 import os
+import time
 
 FILENAME='/home/soumya/training_samples/whiplash_x_10.mp4'
 SIZE = 3 
